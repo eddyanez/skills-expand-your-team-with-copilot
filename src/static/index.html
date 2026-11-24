@@ -103,11 +103,15 @@
 
           <!-- Activities Content -->
           <div class="activities-content">
+            <div id="shared-activity-notice" class="shared-activity-notice hidden">
+              <span id="shared-activity-label"></span>
+              <button id="show-all-activities" type="button">Show all activities</button>
+            </div>
             <div id="activities-list">
               <!-- Activities will be loaded here -->
               <p>Loading activities...</p>
             </div>
-            <div id="message" class="hidden message"></div>
+            <div id="message" class="hidden message" role="status" aria-live="polite"></div>
           </div>
         </div>
       </section>

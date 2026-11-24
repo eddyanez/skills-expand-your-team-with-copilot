@@ -2,6 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // DOM elements
   const activitiesList = document.getElementById("activities-list");
   const messageDiv = document.getElementById("message");
+  const sharedActivityNotice = document.getElementById("shared-activity-notice");
+  const sharedActivityLabel = document.getElementById("shared-activity-label");
+  const showAllActivitiesButton = document.getElementById("show-all-activities");
   const registrationModal = document.getElementById("registration-modal");
   const modalActivityName = document.getElementById("modal-activity-name");
   const signupForm = document.getElementById("signup-form");
@@ -40,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
+  let sharedActivity = new URL(window.location.href).searchParams.get("activity");
 
   // Authentication state
   let currentUser = null;
@@ -413,11 +417,18 @@ document.addEventListener("DOMContentLoaded", () => {
   function displayFilteredActivities() {
     // Clear the activities list
     activitiesList.innerHTML = "";
+    sharedActivityNotice.classList.toggle("hidden", !sharedActivity);
+    if (sharedActivity) {
+      sharedActivityLabel.textContent = `Shared activity: ${sharedActivity}`;
+    }
 
     // Apply client-side filtering - this handles category filter and search, plus weekend filter
     let filteredActivities = {};
 
     Object.entries(allActivities).forEach(([name, details]) => {
+      if (sharedActivity && name !== sharedActivity) {
+        return;
+      }
       const activityType = getActivityType(name, details.description);
 
       // Apply category filter
@@ -569,7 +580,51 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="activity-share" role="group">
+        <span>Share:</span>
+      </div>
     `;
+
+    const shareGroup = activityCard.querySelector(".activity-share");
+    shareGroup.setAttribute("aria-label", `Share ${name}`);
+    const activityUrl = new URL(window.location.pathname, window.location.origin);
+    activityUrl.searchParams.set("activity", name);
+    const shareText = `Check out ${name} at Mergington High School!`;
+    const shareLinks = [
+      ["WhatsApp", "https://wa.me/", { text: `${shareText} ${activityUrl.href}` }],
+      ["Facebook", "https://www.facebook.com/sharer/sharer.php", { u: activityUrl.href }],
+      ["X", "https://twitter.com/intent/tweet", { text: shareText, url: activityUrl.href }],
+    ];
+
+    shareLinks.forEach(([label, baseUrl, params]) => {
+      const link = document.createElement("a");
+      const url = new URL(baseUrl);
+      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+      link.href = url.href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = label;
+      link.setAttribute("aria-label", `Share ${name} on ${label} (opens in a new tab)`);
+      shareGroup.appendChild(link);
+    });
+
+    const copyButton = document.createElement("button");
+    copyButton.type = "button";
+    copyButton.textContent = "Copy link";
+    copyButton.setAttribute("aria-label", `Copy link to ${name}`);
+    copyButton.addEventListener("click", async () => {
+      try {
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          throw new Error("Clipboard is unavailable");
+        }
+        await navigator.clipboard.writeText(activityUrl.href);
+        showMessage(`Link to ${name} copied.`, "success");
+      } catch (error) {
+        console.error("Error copying activity link:", error);
+        showMessage("Could not copy the link. Please use a sharing option instead.", "error");
+      }
+    });
+    shareGroup.appendChild(copyButton);
 
     // Add click handlers for delete buttons
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
@@ -591,6 +646,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Event listeners for search and filter
+  showAllActivitiesButton.addEventListener("click", () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("activity");
+    window.history.replaceState(null, "", url);
+    sharedActivity = null;
+    displayFilteredActivities();
+  });
+
+  window.addEventListener("popstate", () => {
+    sharedActivity = new URL(window.location.href).searchParams.get("activity");
+    displayFilteredActivities();
+  });
+
   searchInput.addEventListener("input", (event) => {
     searchQuery = event.target.value;
     displayFilteredActivities();

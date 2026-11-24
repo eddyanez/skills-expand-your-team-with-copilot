@@ -32,6 +32,22 @@
   --info-light: #d1ecf1;
 }
 
+body.dark-mode {
+  --background: #12161d;
+  --surface: #1e2530;
+  --text-primary: #e5e9f0;
+  --text-secondary: #b0b8c5;
+  --border: #3a4351;
+  --border-light: #303946;
+  --border-focus: #596575;
+}
+
+body.dark-mode input {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -52,7 +68,7 @@ body {
 
 header {
   text-align: center;
-  padding: 12px 0;
+  padding: 48px 0 12px;
   margin-bottom: 15px;
   background-color: var(--primary);
   color: var(--primary-text);
@@ -93,6 +109,14 @@ section h3 {
   border-bottom: 1px solid var(--border);
   color: var(--primary);
   font-size: 1.1rem;
+}
+
+body.dark-mode section h3,
+body.dark-mode .sidebar-filters h3,
+body.dark-mode .activity-card h4,
+body.dark-mode .participants-list h5,
+body.dark-mode #login-modal .modal-content h3 {
+  color: #90caf9;
 }
 
 /* New Layout Styles */
@@ -617,10 +641,17 @@ footer {
 }
 
 /* User controls in header */
-#user-controls {
+#header-controls {
   position: absolute;
   top: 10px;
   right: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#user-controls {
+  position: static;
 }
 
 #user-status {
